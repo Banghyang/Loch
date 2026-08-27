@@ -40,4 +40,4 @@ Banghyang - [github profile](https://github.com/Banghyang)
 Software distributed under [Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Status
-v0.5
+v1.0 🎉
