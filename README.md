@@ -30,7 +30,7 @@ Simple LAN messenger built with C# and Windows Forms. Supports multiple clients,
 Currently under construction. I'll add release page once MVP is done.
 
 ## Why does this project exist?
-- **Primary goal**: - educational purposes, portfolio. 
+- **Primary goal**: — educational purposes, portfolio. 
 - **Secondary goal**: — to provide an easy way for anyone to set up their own chat server.
 
 ## Author
