@@ -13,11 +13,14 @@ namespace Loch
         private TcpClient _client;
         private NetworkStream _stream;
         private bool _isConnected;
+        private readonly Action<string> _logAction;
+        private readonly ConfigImport _config;
 
-        public Form1()
+        public Form1(ConfigImport config)
         {
             InitializeComponent();
 
+            _config = config;
             //Конфигурация основного окна
             this.BackColor = Color.FromArgb(30, 30, 30);
 
@@ -51,9 +54,12 @@ namespace Loch
         {
             try
             {
-                var config = new ConfigImport();
 
-                _connection = new ConnectToServer(config.Ip, config.Port, msg => AddLog(msg));
+                _connection = new ConnectToServer(_config, msg => AddLog(msg));
+
+
+                txtLog.Clear();
+
 
                 _connection.UserListUpdated += OnUserListUpdated;
 
@@ -78,8 +84,8 @@ namespace Loch
 
                 if (!string.IsNullOrWhiteSpace(message))
                 {
-                    SendInput messageSender = new SendInput(_connection._stream);
-                    messageSender.SendMessage(message);
+                    SendInput messageSender = new SendInput(_connection._stream, _config);
+                    messageSender.SendMessage(message, _config.ServerPassword);
                     AddLog($"You: {message}");
                 }
 

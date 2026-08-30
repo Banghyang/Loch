@@ -12,11 +12,51 @@ namespace Loch.Core
         private const int IVSizeBytes = 16;
         private const int KeySizeBytes = 32;
         private const int PBKDF2Iterations = 100_000;
+        private readonly Action<string> _logAction;
 
-        public static byte[] DeriveKey(string password, byte[] salt)
+        public Crypt()
         {
-            ValidatePassword(password);
+        }
 
+        public byte[] EncryptMessage(string text, string password)
+        {
+            byte[] salt = RandomNumberGenerator.GetBytes(SaltSizeBytes);
+            //_logAction($"Decrypt: salt = {Convert.ToBase64String(salt)}");
+            byte[] iv = RandomNumberGenerator.GetBytes(IVSizeBytes);
+
+            byte[] dKey = DeriveKey(password, salt);
+
+            byte[] data = Encoding.UTF8.GetBytes(text);
+            byte[] encrypted = EncryptAes(data, dKey, iv);
+
+            byte[] result = new byte[salt.Length + iv.Length + encrypted.Length];
+            Buffer.BlockCopy(salt, 0, result, 0, salt.Length);
+            Buffer.BlockCopy(iv, 0, result, salt.Length, iv.Length);
+            Buffer.BlockCopy(encrypted, 0, result, salt.Length + iv.Length, encrypted.Length);
+
+            return result;
+        }
+
+        public string DecryptMessage(byte[] packet, string password)
+        {
+            byte[] salt = new byte[SaltSizeBytes];
+            byte[] iv = new byte[IVSizeBytes];
+
+            Buffer.BlockCopy(packet, 0, salt, 0, SaltSizeBytes);
+            byte[] dKey = DeriveKey(password, salt);
+            Buffer.BlockCopy(packet, SaltSizeBytes, iv, 0, IVSizeBytes);
+
+            int encryptedLength = packet.Length - SaltSizeBytes - IVSizeBytes;
+            byte[] encrypted = new byte[encryptedLength];
+            Buffer.BlockCopy(packet, SaltSizeBytes + IVSizeBytes, encrypted, 0, encryptedLength);
+
+            byte[] decrypted = DecryptAes(encrypted, dKey, iv);
+
+            return Encoding.UTF8.GetString(decrypted);
+        }
+
+        public byte[] DeriveKey(string password, byte[] salt)
+        {
             using var pbkdf2 = new Rfc2898DeriveBytes(
                 password,
                 salt,
@@ -25,21 +65,6 @@ namespace Loch.Core
             );
 
             return pbkdf2.GetBytes(KeySizeBytes);
-        }
-
-
-        public  Crypt(string text, string password)
-        {
-            byte[] salt = RandomNumberGenerator.GetBytes(SaltSizeBytes);
-
-            byte[] Hkey = DeriveKey(password, salt);
-
-            byte[] iv = RandomNumberGenerator.GetBytes(IVSizeBytes);
-            RandomNumberGenerator.Fill(iv);
-
-            byte[] data = Encoding.UTF8.GetBytes(text);
-            byte[] encrypted = EncryptAes(data, Hkey, iv);
-
         }
 
         static byte[] EncryptAes(byte[] data, byte[] Hkey, byte[] iv)
@@ -56,10 +81,10 @@ namespace Loch.Core
             }
         }
 
-        public static string Decrypt(byte[] encryptedData, string password, byte[] salt, byte[] iv)
+        public string Decrypt(byte[] encryptedData, string password, byte[] salt, byte[] iv)
         {
-            byte[] Hkey = DeriveKey(password, salt);
-            byte[] decrypted = DecryptAes(encryptedData, Hkey, iv);
+            byte[] dKey = DeriveKey(password, salt);
+            byte[] decrypted = DecryptAes(encryptedData, dKey, iv);
             return Encoding.UTF8.GetString(decrypted);
         }
 
@@ -77,22 +102,5 @@ namespace Loch.Core
             }
         }
 
-        public static void ValidatePassword(string password)
-        {
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
-
-            if (password.Length < MinPasswordLength)
-                throw new ArgumentException(
-                    $"Password must be at least {MinPasswordLength} characters long.",
-                    nameof(password)
-                );
-
-            if (password.Length > MaxPasswordLength)
-                throw new ArgumentException(
-                    $"Password cannot exceed {MaxPasswordLength} characters.",
-                    nameof(password)
-                );
-        }
     }
 }

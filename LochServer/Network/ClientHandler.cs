@@ -1,4 +1,5 @@
-﻿using LochServer.Network;
+﻿using Loch.Core;
+using LochServer.Network;
 using Microsoft.VisualBasic.Devices;
 using System;
 using System.Collections.Generic;
@@ -16,19 +17,38 @@ namespace Loch.Network
     {
         private readonly TcpClient _client;
         private readonly string _clientId;
+        private readonly ConfigImport _config;
         private readonly object _lock = new object();
         private readonly Action<string> _logAction;
 
-        public ClientHandler(TcpClient client, string clientId, Action<string> logAction)
+        public ClientHandler(TcpClient client, string clientId, ConfigImport config, Action<string> logAction = null)
         {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(client));
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _logAction = logAction ?? throw new ArgumentNullException(nameof(logAction));
+            _logAction = logAction ?? ((msg) => Console.WriteLine(msg));
+            _config = config;
+
+        }
+
+        public bool VerifyPassword(NetworkStream stream, string message)
+        {
+
+            if (message == $"AUTH:{_config.ServerPassword}")
+            {
+                _logAction?.Invoke($"[Клиент {_clientId} авторизован.]");
+                return true;
+            }
+            else
+            {
+                _logAction($"[Неудачная авторизация с {_clientId}]");
+                _logAction?.Invoke($"[Попытка: {message}]");
+                _client.Close();
+                return false;
+            }
         }
 
         public async Task StartHandlingAsync()
         {
-            
             var clientInformation = new ClientInfo(_client, _clientId);
 
             ClientInfo.Add(clientInformation);
@@ -36,6 +56,7 @@ namespace Loch.Network
             string id = clientInformation.ClientId;
             NetworkStream stream = clientInformation.Stream;
             bool connected = clientInformation.TcpClient.Connected;
+            clientInformation.VerifyStatus = false;
 
             _ = Task.Run(async () =>
             {
@@ -43,7 +64,7 @@ namespace Loch.Network
                 await SendUserListAsync();
             });
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[4096];
 
             try
             {
@@ -53,31 +74,41 @@ namespace Loch.Network
 
                     if (bytesRead == 0) break;
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    _logAction?.Invoke($"{id}: {message}");
+                    byte[] packet = new byte[bytesRead];
 
-                    byte[] data = Encoding.UTF8.GetBytes($"{message}");
-                    await BroadcastMessageAsync($"{id}: {message}", clientInformation);
+                    Buffer.BlockCopy(buffer, 0, packet, 0, bytesRead);
+
+                    string decrypted = _config.Crypt.DecryptMessage(packet, _config.ServerPassword);
+
+                    if (clientInformation.VerifyStatus != true)
+                    {
+                        clientInformation.VerifyStatus = VerifyPassword(stream, decrypted);
+                        continue;
+                    }                   
+
+                    _logAction?.Invoke($"{id}: {decrypted}");
+
+                    await BroadcastMessageAsync($"{id}: {packet}", clientInformation);
                 }
             }
             catch (Exception ex)
             {
-                _logAction($"Ошибка при чтении {id}: {ex.Message}");
+                _logAction($"[Ошибка при чтении {id}: {ex.Message}]");
             }
             finally
             {
                 _client.Close();
                 ClientInfo.Remove(clientInformation);
-                await BroadcastMessageAsync($"Пользователь {id} отключился", clientInformation);
+                await BroadcastMessageAsync($"[Пользователь {id} отключился]", clientInformation);
                 await SendUserListAsync();
             }
         }
 
         private async Task BroadcastMessageAsync(string message, ClientInfo sender)
         {
-            byte[] data = Encoding.UTF8.GetBytes(message);
-
             var clientsCopy = ClientInfo.GetAll();
+
+            byte[] encrypted = _config.Crypt.EncryptMessage(message, _config.ServerPassword);
 
             foreach (var client in clientsCopy)
             {
@@ -87,17 +118,17 @@ namespace Loch.Network
                 {
                     if (client.TcpClient.Connected && client.Stream.CanWrite)
                     {
-                        await client.Stream.WriteAsync(data, 0, data.Length);
+                        await client.Stream.WriteAsync(encrypted, 0, encrypted.Length);
                         await client.Stream.FlushAsync();
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logAction($"Ошибка отправки клиенту {client.ClientId}: {ex.Message}");
+                    _logAction($"[Ошибка отправки клиенту {client.ClientId}: {ex.Message}]");
 
                     lock (_lock)
                     {
-                        if (!client.TcpClient.Connected) _logAction($"GG");
+                        if (!client.TcpClient.Connected) _logAction($"[GG]");
                            ClientInfo.Remove(client);
                     }
                 }
@@ -107,9 +138,8 @@ namespace Loch.Network
         private async Task SendUserListAsync()
         {
             var userIds = ClientInfo.GetAllIds();
-            string userListMessage = "\x1C/users " + string.Join(",", userIds);
-            byte[] data = Encoding.UTF8.GetBytes(userListMessage);
-
+            string userListMessage = "/./users " + string.Join(",", userIds);
+            byte[] encrypted = _config.Crypt.EncryptMessage(userListMessage, _config.ServerPassword);
             var clients = ClientInfo.GetAll();
             foreach (var client in clients)
             {
@@ -117,13 +147,13 @@ namespace Loch.Network
                 {
                     if (client.TcpClient.Connected && client.Stream.CanWrite)
                     {
-                        await client.Stream.WriteAsync(data, 0, data.Length);
+                        await client.Stream.WriteAsync(encrypted, 0, encrypted.Length);
                         await client.Stream.FlushAsync();
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logAction($"Ошибка отправки списка {client.ClientId}: {ex.Message}");
+                    _logAction($"[Ошибка отправки списка {client.ClientId}: {ex.Message}]");
                 }
             }
         }

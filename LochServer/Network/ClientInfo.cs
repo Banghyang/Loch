@@ -13,6 +13,8 @@ namespace LochServer.Network
         public NetworkStream Stream { get; }
         public string ClientId { get; }
 
+        public bool VerifyStatus { get; set; }
+
         public static event Action<string> OnClientAdded;
         public static event Action<string> OnClientRemoved;
 

@@ -1,12 +1,14 @@
 ﻿using Loch.Core;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LochClient.Network
 {
@@ -20,12 +22,14 @@ namespace LochClient.Network
         private System.Windows.Forms.Timer _reconnectTimer;
         private readonly Action<string> _logAction;
         int reconnectIntervalMs = 3000;
+        private ConfigImport _config;
 
 
-        public  ConnectToServer(string ip, int port, Action<string> logAction = null)
+        public  ConnectToServer(ConfigImport config, Action<string> logAction = null)
         {
-            _ip = ip;
-            _port = port;
+            _config = config;
+            _ip = config.Ip;
+            _port = config.Port;
             _logAction = logAction ?? ((msg) => Console.WriteLine(msg));
             _tcpClient = new TcpClient();
             _reconnectTimer = new System.Windows.Forms.Timer();
@@ -41,11 +45,12 @@ namespace LochClient.Network
             {
                 _tcpClient.Connect(_ip, _port);
                 _stream = _tcpClient.GetStream();
+                SendPaswword();
                 ReadingServer();
             }
             catch(Exception ex)
             {
-                _logAction($"Не удалось подключиться. Повтор через {_reconnectTimer.Interval / 1000} сек...");
+                _logAction($"[Не удалось подключиться. Повтор через {_reconnectTimer.Interval / 1000} сек...]");
                 _reconnectTimer.Start();
             }
         }
@@ -53,10 +58,15 @@ namespace LochClient.Network
         private async void ReconnectTimer_Tick(object sender, EventArgs e)
         {
             _reconnectTimer.Stop();
-            _logAction("Попытка переподключения...");
+            _logAction("[Попытка переподключения...]");
             await Connection();
         }
 
+        private async void SendPaswword()
+        {
+            SendInput _sendInput = new SendInput(_stream, _config);
+            _sendInput.SendMessage($"AUTH:{_config.ServerPassword}", _config.ServerPassword);
+        }
         public async Task ReadingServer()
         {
             byte[] buffer = new byte[1024];
@@ -69,26 +79,26 @@ namespace LochClient.Network
 
                     if (bytesRead == 0) break;
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    byte[] packet = new byte[bytesRead];
+                    Buffer.BlockCopy(buffer, 0, packet, 0, bytesRead);
 
-                    if (message.StartsWith("\x1C/users "))
+                    string decrypt = _config.Crypt.DecryptMessage(packet, _config.ServerPassword);
+                    if (decrypt.StartsWith("/./users "))
                     {
-                        string idsPart = message.Substring(7).Trim();
+                        string idsPart = decrypt.Substring(8).Trim();
                         var userIds = idsPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                         UserListUpdated?.Invoke(userIds);
                     }
                     else
                     {
-                        _logAction($"{message}");
+                        _logAction($"{decrypt}");
 
-                        string logPath = Path.Combine(Application.StartupPath, "debug.txt");
-                        File.AppendAllText(logPath, $"{DateTime.Now}: {message}\n");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logAction?.Invoke($"{ex}");
+                _logAction?.Invoke($"[{ex}]");
             }
             finally
             {
@@ -96,7 +106,7 @@ namespace LochClient.Network
                 _reconnectTimer?.Dispose();
                 _tcpClient?.Close();
                 _stream?.Close();
-                _logAction($"Клиент отключен.");
+                _logAction($"[Клиент отключен]");
             }
         }
     }

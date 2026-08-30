@@ -10,10 +10,11 @@ namespace Loch
     public partial class Form1 : Form
     {
         private ServerProcessing _server;
-
-        public Form1()
+        private readonly ConfigImport _config;
+        public Form1(ConfigImport config)
         {
             InitializeComponent();
+            _config = config;
 
             //Конфигурация основного окна
             this.BackColor = Color.FromArgb(30, 30, 30);
@@ -46,21 +47,19 @@ namespace Loch
         {
             try
             {
-
-                var config = new ConfigImport();
  
-                _server = new ServerProcessing(config.Ip, config.Port, msg => AddLog(msg));
+                _server = new ServerProcessing(_config, msg => AddLog(msg));
 
                 _ = Task.Run(() => _server.StartAsync());
 
-                AddLog("Сервер работает и ждет клиентов.");
+                AddLog("[Сервер работает и ожидает клиентов.]");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при запуске: {ex.Message}\n\nДетали:\n{ex.StackTrace}",
+                MessageBox.Show($"[Ошибка при запуске: {ex.Message}\n\nДетали:\n{ex.StackTrace}]",
                                 "Ошибка запуска", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                AddLog($"КРИТИЧЕСКАЯ ОШИБКА: {ex.Message}", true);
+                AddLog($"[КРИТИЧЕСКАЯ ОШИБКА: {ex.Message}]", true);
             }
         }
 
@@ -88,7 +87,6 @@ namespace Loch
             }
 
             lstUsers.Items.Add(clientId);
-            AddLog($"Пользователь {clientId} подключился");
 
         }
 
@@ -106,7 +104,6 @@ namespace Loch
                 if (item.Text == clientId)
                 {
                     lstUsers.Items.Remove(item);
-                    AddLog($"Пользователь {clientId} отключился");
                     return;
                 }
             }

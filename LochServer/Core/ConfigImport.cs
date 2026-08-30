@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace Loch.Core
 {
-    internal class ConfigImport
+    public class ConfigImport
     {
-        private readonly string _ip;
-        private readonly int _port;
+        public string Ip { get; }
+        public int Port { get; }
+        public string ServerPassword { get; set; }
+        public Crypt Crypt { get; set; }
 
         public ConfigImport()
         {
             string[] config = File.ReadAllLines("Config.txt");
-            _ip = config[0];
-            _port = int.Parse(config[1]);
+            Ip = config[0];
+            Port = int.Parse(config[1]);
         }
-        public string Ip => _ip;
-        public int Port => _port;
     }
 
 

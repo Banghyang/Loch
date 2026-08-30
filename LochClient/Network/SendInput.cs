@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Loch.Core;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
@@ -8,17 +9,18 @@ namespace LochClient.Network
     {
         private readonly NetworkStream _stream;
         private string _message;
-        public SendInput(NetworkStream stream)
+        private ConfigImport _config;
+        public SendInput(NetworkStream stream, ConfigImport config)
         {
+            _config = config;
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
 
-        public async Task SendMessage(string message)
+        public async Task SendMessage(string message, string password)
         {
             if (string.IsNullOrWhiteSpace(message)) return;
-
-            byte[] data = Encoding.UTF8.GetBytes(message);
-            await _stream.WriteAsync(data, 0, data.Length);
+            byte[] encrypted = _config.Crypt.EncryptMessage(message, password);
+            await _stream.WriteAsync(encrypted, 0, encrypted.Length);
         }
     }
 
