@@ -39,5 +39,5 @@ Banghyang - [github profile](https://github.com/Banghyang)
 ## License
 Software distributed under [Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/)
 
-## Status
+## Current version
 v1.1
