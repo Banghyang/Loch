@@ -15,6 +15,8 @@ namespace LochServer.Network
 
         public bool VerifyStatus { get; set; }
 
+        public string UserNickname { get; set; }
+
         public static event Action<string> OnClientAdded;
         public static event Action<string> OnClientRemoved;
 

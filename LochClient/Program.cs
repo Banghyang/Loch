@@ -16,6 +16,14 @@ namespace Loch
 
             ApplicationConfiguration.Initialize();
 
+            using (NickAuth loginForm = new NickAuth(config))
+            {
+                if (loginForm.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+            }
+
             using (Auth loginForm = new Auth(config, _logAction))
             {
                 if (loginForm.ShowDialog() != DialogResult.OK)

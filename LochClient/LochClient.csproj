@@ -12,12 +12,19 @@
     <Compile Update="GUI\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="GUI\NickAuth.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Config.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GHSoftware.MarkdownToRtf" Version="0.1.0" />
   </ItemGroup>
 
 </Project>

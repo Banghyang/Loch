@@ -11,6 +11,7 @@ namespace Loch.Core
         public string Ip { get; }
         public int Port { get; }
         public string ServerPassword { get; set; }
+        public string NickName { get; set; }
         public Crypt Crypt { get; set; }
 
         public ConfigImport()

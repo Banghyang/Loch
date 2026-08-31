@@ -1,6 +1,6 @@
 ﻿namespace LochClient.GUI
 {
-    partial class Auth
+    partial class NickAuth
     {
         /// <summary>
         /// Required designer variable.
@@ -29,48 +29,49 @@
         private void InitializeComponent()
         {
             label1 = new Label();
-            txtPassword = new TextBox();
+            txtNickname = new TextBox();
             lblError = new Label();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(118, 91);
+            label1.Location = new Point(115, 91);
             label1.Name = "label1";
-            label1.Size = new Size(93, 15);
+            label1.Size = new Size(102, 15);
             label1.TabIndex = 0;
-            label1.Text = "Введите пароль";
+            label1.Text = "Введите никнейм";
             label1.Click += label1_Click;
             // 
-            // txtPassword
+            // txtNickname
             // 
-            txtPassword.Location = new Point(109, 109);
-            txtPassword.Name = "txtPassword";
-            txtPassword.PasswordChar = '*';
-            txtPassword.Size = new Size(116, 23);
-            txtPassword.TabIndex = 1;
+            txtNickname.Location = new Point(109, 109);
+            txtNickname.Name = "txtNickname";
+            txtNickname.Size = new Size(116, 23);
+            txtNickname.TabIndex = 1;
             // 
             // lblError
             // 
+            lblError.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             lblError.AutoSize = true;
             lblError.ForeColor = Color.Crimson;
             lblError.Location = new Point(115, 144);
             lblError.Name = "lblError";
             lblError.Size = new Size(0, 15);
             lblError.TabIndex = 2;
-            lblError.TextAlign = ContentAlignment.TopCenter;
+            lblError.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // Auth
+            // NickAuth
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(341, 226);
             Controls.Add(lblError);
-            Controls.Add(txtPassword);
+            Controls.Add(txtNickname);
             Controls.Add(label1);
-            Name = "Auth";
+            Name = "NickAuth";
             Text = "Auth";
+            Load += NickAuth_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -78,7 +79,7 @@
         #endregion
 
         private Label label1;
-        private TextBox txtPassword;
+        private TextBox txtNickname;
         private Label lblError;
     }
 }

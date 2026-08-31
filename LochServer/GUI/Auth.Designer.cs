@@ -55,10 +55,11 @@
             // 
             lblError.AutoSize = true;
             lblError.ForeColor = Color.Crimson;
-            lblError.Location = new Point(118, 144);
+            lblError.Location = new Point(163, 144);
             lblError.Name = "lblError";
             lblError.Size = new Size(0, 15);
             lblError.TabIndex = 2;
+            lblError.TextAlign = ContentAlignment.TopCenter;
             // 
             // Auth
             // 

@@ -5,10 +5,7 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using MarkdownToRtf;
 
 namespace LochClient.Network
 {
@@ -23,6 +20,7 @@ namespace LochClient.Network
         private readonly Action<string> _logAction;
         int reconnectIntervalMs = 3000;
         private ConfigImport _config;
+        public event Action<string> MessageReceived;
 
 
         public  ConnectToServer(ConfigImport config, Action<string> logAction = null)
@@ -66,6 +64,7 @@ namespace LochClient.Network
         {
             SendInput _sendInput = new SendInput(_stream, _config);
             _sendInput.SendMessage($"AUTH:{_config.ServerPassword}", _config.ServerPassword);
+            _sendInput.SendMessage($"AUTH2:{_config.NickName}", _config.ServerPassword);
         }
         public async Task ReadingServer()
         {
@@ -82,17 +81,16 @@ namespace LochClient.Network
                     byte[] packet = new byte[bytesRead];
                     Buffer.BlockCopy(buffer, 0, packet, 0, bytesRead);
 
-                    string decrypt = _config.Crypt.DecryptMessage(packet, _config.ServerPassword);
-                    if (decrypt.StartsWith("/./users "))
+                    string decrypted = _config.Crypt.DecryptMessage(packet, _config.ServerPassword);
+                    if (decrypted.StartsWith("/./users "))
                     {
-                        string idsPart = decrypt.Substring(8).Trim();
+                        string idsPart = decrypted.Substring(8).Trim();
                         var userIds = idsPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                         UserListUpdated?.Invoke(userIds);
                     }
                     else
                     {
-                        _logAction($"{decrypt}");
-
+                        MessageReceived?.Invoke(decrypted);
                     }
                 }
             }

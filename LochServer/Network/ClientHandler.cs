@@ -84,22 +84,28 @@ namespace Loch.Network
                     {
                         clientInformation.VerifyStatus = VerifyPassword(stream, decrypted);
                         continue;
-                    }                   
+                    }
+                    if (clientInformation.UserNickname == null && decrypted.StartsWith("AUTH2:"))
+                    {
+                        string UserNickname = decrypted.Substring(6).Trim();
+                        clientInformation.UserNickname = UserNickname;
+                        continue;
+                    }
 
-                    _logAction?.Invoke($"{id}: {decrypted}");
+                    _logAction?.Invoke($"[{id}] {clientInformation.UserNickname}: {decrypted}");
 
-                    await BroadcastMessageAsync($"{id}: {packet}", clientInformation);
+                    await BroadcastMessageAsync($"{clientInformation.UserNickname}: {decrypted}", clientInformation);
                 }
             }
             catch (Exception ex)
             {
-                _logAction($"[Ошибка при чтении {id}: {ex.Message}]");
+                _logAction($"[Ошибка при чтении [{id}] {clientInformation.UserNickname}: {ex.Message}]");
             }
             finally
             {
                 _client.Close();
                 ClientInfo.Remove(clientInformation);
-                await BroadcastMessageAsync($"[Пользователь {id} отключился]", clientInformation);
+                await BroadcastMessageAsync($"[Пользователь {clientInformation.UserNickname} отключился]", clientInformation);
                 await SendUserListAsync();
             }
         }

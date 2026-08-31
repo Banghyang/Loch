@@ -1,5 +1,6 @@
 using Loch.Core;
 using LochClient.Network;
+using MarkdownToRtf;
 using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Loch
         private bool _isConnected;
         private readonly Action<string> _logAction;
         private readonly ConfigImport _config;
+        public event Action<string> MessageReceived;
 
         public Form1(ConfigImport config)
         {
@@ -60,7 +62,7 @@ namespace Loch
 
                 txtLog.Clear();
 
-
+                _connection.MessageReceived += OnMessageReceived;
                 _connection.UserListUpdated += OnUserListUpdated;
 
             }
@@ -86,7 +88,7 @@ namespace Loch
                 {
                     SendInput messageSender = new SendInput(_connection._stream, _config);
                     messageSender.SendMessage(message, _config.ServerPassword);
-                    AddLog($"You: {message}");
+                    DisplayMessage($"You: {message}");
                 }
 
                 EntryBox.Clear();
@@ -95,7 +97,12 @@ namespace Loch
             }
         }
 
-private void textBox1_TextChanged(object sender, EventArgs e)
+        private void DisplayMessage(string message)
+        {
+            AppendFormattedMessage(message);
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
         {
             // Пусто
         }
@@ -135,7 +142,49 @@ private void textBox1_TextChanged(object sender, EventArgs e)
             txtLog.ScrollToCaret();
         }
 
-        private void textBox1_TextChanged_1(object sender, EventArgs e)
+        private void OnMessageReceived(string message)
+        {
+            AppendFormattedMessage(message);
+        }
+
+        private void AppendFormattedMessage(string message)
+            {
+                try
+                {
+                    string rtf = MarkdownToRtfConverter.Convert(message);
+
+                    if (string.IsNullOrWhiteSpace(rtf))
+                    {
+                        txtLog.AppendText(message + Environment.NewLine);
+                        return;
+                    }
+
+                    if (txtLog.InvokeRequired)
+                    {
+                        txtLog.Invoke(() => InsertRtf(rtf));
+                    }
+                    else
+                    {
+                        InsertRtf(rtf);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    txtLog.AppendText(message + Environment.NewLine);
+                }
+            }
+
+            private void InsertRtf(string rtf)
+            {
+                txtLog.SelectionStart = txtLog.TextLength;
+                txtLog.SelectionLength = 0;
+
+                txtLog.SelectedRtf = rtf;
+
+                txtLog.ScrollToCaret();
+            }
+
+    private void textBox1_TextChanged_1(object sender, EventArgs e)
         {
 
         }

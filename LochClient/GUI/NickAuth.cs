@@ -11,17 +11,17 @@ using System.Windows.Forms;
 
 namespace LochClient.GUI
 {
-    public partial class Auth : Form
+    public partial class NickAuth : Form
     {
         private ConfigImport _config;
-        public Auth(ConfigImport config)
+        public NickAuth(ConfigImport config)
         {
             InitializeComponent();
             _config = config;
-            txtPassword.KeyDown += txtPassword_KeyDown;
+            txtNickname.KeyDown += txtNickname_KeyDown;
         }
 
-        private void txtPassword_KeyDown(object sender, KeyEventArgs e)
+        private void txtNickname_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -32,23 +32,13 @@ namespace LochClient.GUI
 
         private void TryConnect()
         {
-            if (string.IsNullOrWhiteSpace(txtPassword.Text))
+            if (string.IsNullOrWhiteSpace(txtNickname.Text))
             {
-                lblError.Location = new Point(115, 144);
-                lblError.Text = "Введите пароль!";
+                lblError.Text = "Введите никнейм!";
                 return;
             }
 
-            if (txtPassword.Text.Length < 12)
-            {
-                lblError.Location = new Point(45, 144);
-                lblError.Text = "Пароль должен быть минимум 12 символов!";
-                return;
-            }
-
-            var crypt = new Crypt();
-            _config.ServerPassword = txtPassword.Text;
-            _config.Crypt = crypt;
+            _config.NickName = txtNickname.Text;
 
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -60,5 +50,9 @@ namespace LochClient.GUI
 
         }
 
+        private void NickAuth_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

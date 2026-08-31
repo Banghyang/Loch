@@ -36,12 +36,14 @@ namespace LochClient.GUI
         {
             if (string.IsNullOrWhiteSpace(txtPassword.Text))
             {
+                lblError.Location = new Point(115, 144);
                 lblError.Text = "Введите пароль!";
                 return;
             }
 
             if (txtPassword.Text.Length < 12)
             {
+                lblError.Location = new Point(45, 144);
                 lblError.Text = "Пароль должен быть минимум 12 символов!";
                 return;
             }
