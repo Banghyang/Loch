@@ -28,17 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            txtLog = new RichTextBox();
             lstUsers = new ListView();
+            txtLog = new RichTextBox();
             SuspendLayout();
-            // 
-            // txtLog
-            // 
-            txtLog.Location = new Point(143, 29);
-            txtLog.Name = "txtLog";
-            txtLog.Size = new Size(657, 358);
-            txtLog.TabIndex = 0;
-            txtLog.Text = "";
             // 
             // lstUsers
             // 
@@ -48,13 +40,22 @@
             lstUsers.TabIndex = 1;
             lstUsers.UseCompatibleStateImageBehavior = false;
             // 
+            // txtLog
+            // 
+            txtLog.Location = new Point(143, 29);
+            txtLog.Name = "txtLog";
+            txtLog.ScrollBars = RichTextBoxScrollBars.Vertical;
+            txtLog.Size = new Size(656, 358);
+            txtLog.TabIndex = 2;
+            txtLog.Text = "";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(lstUsers);
             Controls.Add(txtLog);
+            Controls.Add(lstUsers);
             Name = "Form1";
             Text = "Form1";
             Load += Form1_Load;
@@ -62,8 +63,7 @@
         }
 
         #endregion
-
-        private RichTextBox txtLog;
         private ListView lstUsers;
+        private RichTextBox txtLog;
     }
 }

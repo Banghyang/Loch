@@ -18,6 +18,10 @@ namespace LochClient.GUI
         public Auth(ConfigImport config, Action<string> logAction = null)
         {
             InitializeComponent();
+
+            this.Text = "Authorization";
+
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
             _config = config;
             txtPassword.KeyDown += txtPassword_KeyDown;
             _logAction = logAction ?? ((msg) => Console.WriteLine(msg));

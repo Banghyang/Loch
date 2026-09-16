@@ -61,5 +61,13 @@ namespace LochServer.Network
                 return _clients.Select(c => c.ClientId).ToList();
             }
         }
+
+        public static List<string> GetAllNicknames()
+        {
+            lock (_lock)
+            {
+                return _clients.Select(c => c.UserNickname).ToList();
+            }
+        }
     }
 }

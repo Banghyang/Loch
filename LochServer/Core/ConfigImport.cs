@@ -12,12 +12,14 @@ namespace Loch.Core
         public int Port { get; }
         public string ServerPassword { get; set; }
         public Crypt Crypt { get; set; }
+        public int MaxClients { get; set; }
 
         public ConfigImport()
         {
             string[] config = File.ReadAllLines("Config.txt");
             Ip = config[0];
             Port = int.Parse(config[1]);
+            MaxClients = int.Parse(config[2]);
         }
     }
 

@@ -17,6 +17,10 @@ namespace LochClient.GUI
         public NickAuth(ConfigImport config)
         {
             InitializeComponent();
+
+            this.Text = "Authorization";
+
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
             _config = config;
             txtNickname.KeyDown += txtNickname_KeyDown;
         }
@@ -35,6 +39,11 @@ namespace LochClient.GUI
             if (string.IsNullOrWhiteSpace(txtNickname.Text))
             {
                 lblError.Text = "Введите никнейм!";
+                return;
+            }
+            if (txtNickname.Text.Length > 12)
+            {
+                lblError.Text = "Слишком длинный никнейм!";
                 return;
             }
 

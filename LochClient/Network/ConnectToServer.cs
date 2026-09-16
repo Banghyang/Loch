@@ -15,12 +15,24 @@ namespace LochClient.Network
         public NetworkStream _stream;
         private readonly string _ip;
         private readonly int _port;
+
         public event Action<string[]> UserListUpdated;
+
         private System.Windows.Forms.Timer _reconnectTimer;
+
         private readonly Action<string> _logAction;
+
         int reconnectIntervalMs = 3000;
+
         private ConfigImport _config;
+
         public event Action<string> MessageReceived;
+        public event Action ClearChatRequested;
+
+        public event Action<string> TypingStarted;
+        public event Action<string> TypingStopped;
+
+        private DateTime _lastTypingSent = DateTime.MinValue;
 
 
         public  ConnectToServer(ConfigImport config, Action<string> logAction = null)
@@ -43,8 +55,9 @@ namespace LochClient.Network
             {
                 _tcpClient.Connect(_ip, _port);
                 _stream = _tcpClient.GetStream();
-                SendPaswword();
-                ReadingServer();
+                ClearChatRequested?.Invoke();
+                await SendPaswword();
+                await ReadingServer();
             }
             catch(Exception ex)
             {
@@ -60,11 +73,11 @@ namespace LochClient.Network
             await Connection();
         }
 
-        private async void SendPaswword()
+        private async Task SendPaswword()
         {
             SendInput _sendInput = new SendInput(_stream, _config);
-            _sendInput.SendMessage($"AUTH:{_config.ServerPassword}", _config.ServerPassword);
-            _sendInput.SendMessage($"AUTH2:{_config.NickName}", _config.ServerPassword);
+            await _sendInput.SendMessage($"AUTH2:{_config.NickName}", _config.ServerPassword);
+            await _sendInput.SendMessage($"AUTH:{_config.ServerPassword}", _config.ServerPassword);
         }
         public async Task ReadingServer()
         {
@@ -74,17 +87,13 @@ namespace LochClient.Network
             {
                 while (_tcpClient.Connected)
                 {
-                    int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
-
-                    if (bytesRead == 0) break;
-
-                    byte[] packet = new byte[bytesRead];
-                    Buffer.BlockCopy(buffer, 0, packet, 0, bytesRead);
+                    byte[] packet = await PacketCount(_stream);
+                    if (packet == null) break;
 
                     string decrypted = _config.Crypt.DecryptMessage(packet, _config.ServerPassword);
-                    if (decrypted.StartsWith("/./users "))
+                    if (decrypted.StartsWith("\u0001users "))
                     {
-                        string idsPart = decrypted.Substring(8).Trim();
+                        string idsPart = decrypted.Substring(7).Trim();
                         var userIds = idsPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                         UserListUpdated?.Invoke(userIds);
                     }
@@ -106,6 +115,47 @@ namespace LochClient.Network
                 _stream?.Close();
                 _logAction($"[Клиент отключен]");
             }
+        }
+        private async Task<byte[]> PacketCount(NetworkStream stream)
+        {
+            const int MIN_PACKET_SIZE = 49;
+            const int MAX_PACKET_SIZE = 4096;
+
+            byte[] lenBuf = new byte[4];
+            int read = 0;
+            while (read < 4)
+            {
+                int r = await stream.ReadAsync(lenBuf, read, 4 - read);
+                if (r == 0)
+                {
+                    _logAction($"[Клиент закрыл соединение при чтении длины.]");
+                    return null;
+                }
+                read += r;
+            }
+
+            int packetLength = BitConverter.ToInt32(lenBuf, 0);
+
+            if (packetLength < MIN_PACKET_SIZE || packetLength > MAX_PACKET_SIZE)
+            {
+                _logAction($"[Некорректный размер пакета: {packetLength} байт. (мин: {MIN_PACKET_SIZE}, макс: {MAX_PACKET_SIZE})]");
+                return null;
+            }
+
+            byte[] packetData = new byte[packetLength];
+            int totalRead = 0;
+            while (totalRead < packetLength)
+            {
+                int r = stream.Read(packetData, totalRead, packetLength - totalRead);
+                if (r == 0)
+                {
+                    Console.WriteLine($"[Клиент закрыл соединение при чтении тела пакета.]");
+                    return null;
+                }
+                totalRead += r;
+            }
+
+            return packetData;
         }
     }
 }

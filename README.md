@@ -19,12 +19,16 @@ Simple LAN messenger built with C# and Windows Forms. Supports multiple clients,
 - UI customization
 
 ## Roadmap
-- ~~v1.0 - Stable MVP~~
-- ~~v1.1 - Markdown formatting~~
-- v1.2 - Message indicators (delivered/read)
-- v1.3 - "Typing..." indicator
-- v1.4 - Customization(Dark/Light theme)
+- ~~v1.0 - Stable MVP~~ **Done**
+- ~~v1.1 - Markdown formatting~~ **Done**
+- ~~Message indicators (delivered/read)~~ deffered: Faced the limitation of current UI realization
+- ~~v1.2 - "Typing..." indicator~~ **Done**
+- ~~v1.3 - Reliability: packet framing, validation, client limit through config.txt~~ **Done**
+- ~~v1.4 - notification (sound + flash)~~ **Done** (sounds need polish)
+- v1.5 Server commands (ban/kick etc)
 - v2.0 - File sending
+- v2.1 - Customization(UI improvements)
+- v2.2 - Customization(Dark/Light theme)
 
 ## Getting Started
 Currently under construction. I'll add release page once MVP is done.
@@ -40,4 +44,4 @@ Banghyang - [github profile](https://github.com/Banghyang)
 Software distributed under [Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Current version
-v1.1
+v1.4

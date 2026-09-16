@@ -2,6 +2,7 @@ using Loch.Core;
 using Loch.Network;
 using LochServer.Network;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -9,15 +10,22 @@ namespace Loch
 {
     public partial class Form1 : Form
     {
+        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+        private static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
+
         private ServerProcessing _server;
         private readonly ConfigImport _config;
         public Form1(ConfigImport config)
         {
             InitializeComponent();
+
+            this.Text = "Loch Server";
+
             _config = config;
 
             //Конфигурация основного окна
             this.BackColor = Color.FromArgb(30, 30, 30);
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
 
             //Конфигурация чата
             txtLog.ReadOnly = true;
@@ -25,6 +33,12 @@ namespace Loch
             txtLog.ForeColor = Color.LightGreen;
             txtLog.Font = new Font("Consolas", 10);
             txtLog.BorderStyle = BorderStyle.None;
+
+            txtLog.HandleCreated += (s, e) =>
+            {
+                // "DarkMode_Explorer" заставляет Windows рисовать тёмный скроллбар
+                SetWindowTheme(txtLog.Handle, "DarkMode_Explorer", null);
+            };
 
             //Эвенты списка пользователей
             ClientInfo.OnClientAdded += OnClientAdded;
@@ -39,7 +53,7 @@ namespace Loch
             lstUsers.MultiSelect = false;
             lstUsers.Scrollable = true;
             lstUsers.Columns.Clear();
-            lstUsers.Columns.Add("",-2);
+            lstUsers.Columns.Add("", -2);
             lstUsers.HeaderStyle = ColumnHeaderStyle.None;
         }
 
@@ -47,7 +61,6 @@ namespace Loch
         {
             try
             {
- 
                 _server = new ServerProcessing(_config, msg => AddLog(msg));
 
                 _ = Task.Run(() => _server.StartAsync());
@@ -107,6 +120,11 @@ namespace Loch
                     return;
                 }
             }
+        }
+
+        private void darkTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            
         }
     }
 }

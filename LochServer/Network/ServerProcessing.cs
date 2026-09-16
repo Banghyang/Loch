@@ -37,22 +37,50 @@ namespace Loch.Network
 
             while (_isRunning)
             {
+                var clients = ClientInfo.GetAll();
+                if (clients.Count >= _config.MaxClients)
+                {
+                    if (_server.Server.IsBound)
+                    {
+                        _logAction($"[Лимит {_config.MaxClients} достигнут. Приём новых подключений приостановлен]");
+                        _server.Stop();
+                    }
+                }
+
+                while (_isRunning && ClientInfo.GetAll().Count >= _config.MaxClients)
+                {
+                    await Task.Delay(1000);
+                }
+
+                if (!_isRunning) break;
+
+                _server.Start(5);
+                _logAction($"[Приём возобновлён]");
+
+                TcpClient _client;
+
                 try
                 {
-                    TcpClient _client = await _server.AcceptTcpClientAsync();
-                    string _clientId = _client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
-
-                    ClientHandler handler = new ClientHandler(_client, _clientId, _config, _logAction);
-                    _ = handler.StartHandlingAsync();
+                    _client = await _server.AcceptTcpClientAsync();
                 }
                 catch (ObjectDisposedException)
+                {
+                    break;
+                }
+                catch (SocketException)
                 {
                     break;
                 }
                 catch (Exception ex)
                 {
                     _logAction($"{ex}");
+                    break;
                 }
+
+                string _clientId = _client.Client.RemoteEndPoint?.ToString() ?? "Unknown";
+
+                ClientHandler handler = new ClientHandler(_client, _clientId, _config, _logAction);
+                _ = handler.StartHandlingAsync();
             }
         }
 
