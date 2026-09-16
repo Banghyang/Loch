@@ -25,7 +25,7 @@ Simple LAN messenger built with C# and Windows Forms. Supports multiple clients,
 - ~~v1.2 - "Typing..." indicator~~ **Done**
 - ~~v1.3 - Reliability: packet framing, validation, client limit through config.txt~~ **Done**
 - ~~v1.4 - notification (sound + flash)~~ **Done** (sounds need polish)
-- v1.5 Server commands (ban/kick etc)
+- ~~v1.5 Server commands (ban/kick etc)~~ **Done**
 - v2.0 - File sending
 - v2.1 - Customization(UI improvements)
 - v2.2 - Customization(Dark/Light theme)

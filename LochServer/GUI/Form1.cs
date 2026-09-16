@@ -1,12 +1,10 @@
-using Loch.Core;
-using Loch.Network;
+Ôªøusing LochServer.Core;
 using LochServer.Network;
-using System;
+using System.Data.Common;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
-namespace Loch
+namespace LochServer.GUI
 {
     public partial class Form1 : Form
     {
@@ -15,6 +13,13 @@ namespace Loch
 
         private ServerProcessing _server;
         private readonly ConfigImport _config;
+
+        private ContextMenuStrip _userContextMenu;
+        private ToolStripMenuItem _menuKick;
+        private ToolStripMenuItem _menuBan;
+
+        private ServerCommands _serverCommands;
+
         public Form1(ConfigImport config)
         {
             InitializeComponent();
@@ -23,31 +28,31 @@ namespace Loch
 
             _config = config;
 
-            // ÓÌÙË„Û‡ˆËˇ ÓÒÌÓ‚ÌÓ„Ó ÓÍÌ‡
+            //–ö–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏—è –æ—Å–Ω–æ–≤–Ω–æ–≥–æ –æ–∫–Ω–∞
             this.BackColor = Color.FromArgb(30, 30, 30);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
 
-            // ÓÌÙË„Û‡ˆËˇ ˜‡Ú‡
+            //–ö–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏—è —á–∞—Ç–∞
             txtLog.ReadOnly = true;
             txtLog.BackColor = Color.FromArgb(30, 30, 30);
             txtLog.ForeColor = Color.LightGreen;
-            txtLog.Font = new Font("Consolas", 10);
+            txtLog.Font = new System.Drawing.Font("Consolas", 10);
             txtLog.BorderStyle = BorderStyle.None;
 
             txtLog.HandleCreated += (s, e) =>
             {
-                // "DarkMode_Explorer" Á‡ÒÚ‡‚ÎˇÂÚ Windows ËÒÓ‚‡Ú¸ Ú∏ÏÌ˚È ÒÍÓÎÎ·‡
+                // "DarkMode_Explorer" –∑–∞—Å—Ç–∞–≤–ª—è–µ—Ç Windows —Ä–∏—Å–æ–≤–∞—Ç—å —Ç—ë–º–Ω—ã–π —Å–∫—Ä–æ–ª–ª–±–∞—Ä
                 SetWindowTheme(txtLog.Handle, "DarkMode_Explorer", null);
             };
 
-            //›‚ÂÌÚ˚ ÒÔËÒÍ‡ ÔÓÎ¸ÁÓ‚‡ÚÂÎÂÈ
+            //–≠–≤–µ–Ω—Ç—ã —Å–ø–∏—Å–∫–∞ –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª–µ–π
             ClientInfo.OnClientAdded += OnClientAdded;
             ClientInfo.OnClientRemoved += OnClientRemoved;
 
-            // ÓÌÙË„Û‡ˆËˇ ÒÔËÒÍ‡ ÔÓÎ¸ÁÓ‚‡ÚÂÎÂÈ
+            //–ö–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏—è —Å–ø–∏—Å–∫–∞ –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª–µ–π
             lstUsers.BackColor = Color.FromArgb(30, 30, 30);
             lstUsers.ForeColor = Color.LightGreen;
-            lstUsers.Font = new Font("Consolas", 10);
+            lstUsers.Font = new System.Drawing.Font("Consolas", 10);
             lstUsers.View = View.Details;
             lstUsers.FullRowSelect = true;
             lstUsers.MultiSelect = false;
@@ -55,6 +60,12 @@ namespace Loch
             lstUsers.Columns.Clear();
             lstUsers.Columns.Add("", -2);
             lstUsers.HeaderStyle = ColumnHeaderStyle.None;
+
+            EntryBox.BackColor = Color.FromArgb(30, 30, 30);
+            EntryBox.ForeColor = Color.LightGreen;
+            EntryBox.Font = new System.Drawing.Font("Consolas", 10);
+
+            //–ö–æ–Ω—Ç–µ–∫—Å—Ç–Ω–æ–µ –º–µ–Ω—é
         }
 
         private async void Form1_Load(object sender, EventArgs e)
@@ -65,14 +76,54 @@ namespace Loch
 
                 _ = Task.Run(() => _server.StartAsync());
 
-                AddLog("[—Â‚Â ‡·ÓÚ‡ÂÚ Ë ÓÊË‰‡ÂÚ ÍÎËÂÌÚÓ‚.]");
+                _serverCommands = _server.Commands;
+
+                AddLog("[–°–µ—Ä–≤–µ—Ä —Ä–∞–±–æ—Ç–∞–µ—Ç –∏ –æ–∂–∏–¥–∞–µ—Ç –∫–ª–∏–µ–Ω—Ç–æ–≤.]");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"[Œ¯Ë·Í‡ ÔË Á‡ÔÛÒÍÂ: {ex.Message}\n\nƒÂÚ‡ÎË:\n{ex.StackTrace}]",
-                                "Œ¯Ë·Í‡ Á‡ÔÛÒÍ‡", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"[–û—à–∏–±–∫–∞ –ø—Ä–∏ –∑–∞–ø—É—Å–∫–µ: {ex.Message}\n\n–î–µ—Ç–∞–ª–∏:\n{ex.StackTrace}]",
+                                "–û—à–∏–±–∫–∞ –∑–∞–ø—É—Å–∫–∞", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                AddLog($"[ –»“»◊≈— ¿ﬂ Œÿ»¡ ¿: {ex.Message}]", true);
+                AddLog($"[–ö–†–ò–¢–ò–ß–ï–°–ö–ê–Ø –û–®–ò–ë–ö–ê: {ex.Message}]", true);
+            }
+        }
+
+        private void EntryBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                try
+                {
+                    string message = EntryBox.Text.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(message))
+                    {
+                        if (message.Length > 1024)
+                        {
+                            AddLog("[–°–ª–∏—à–∫–æ–º –±–æ–ª—å—à–æ–µ —Å–æ–æ–±—â–µ–Ω–∏–µ!]");
+                        }
+                        if (message.StartsWith("/"))
+                        {
+                            // –≠—Ç–æ –∫–æ–º–∞–Ω–¥–∞ ‚Äî –æ—Ç–¥–∞—ë–º –≤ ServerCommands
+                            // sender = null ‚Üí –∫–æ–º–∞–Ω–¥–∞ "–æ—Ç —Å–µ—Ä–≤–µ—Ä–∞", –ø—Ä–∞–≤ –Ω–µ—Ç, –≤—Å—ë —Ä–∞–∑—Ä–µ—à–µ–Ω–æ
+                            _serverCommands.TryProcess(null, message);
+                            AddLog($"[–ö–æ–º–∞–Ω–¥–∞: {message}]");
+                            EntryBox.Clear();
+                        }
+                        else
+                        {
+                            AddLog($"[Server] {message}");
+                            EntryBox.Clear();
+                        }
+                    }
+
+                    e.SuppressKeyPress = true;
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"{ex}");
+                }
             }
         }
 
@@ -124,7 +175,44 @@ namespace Loch
 
         private void darkTextBox1_TextChanged(object sender, EventArgs e)
         {
-            
+
+        }
+
+        private void toolStripComboBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void contextMenuStrip1_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (lstUsers.SelectedItems.Count == 0)
+                e.Cancel = true;
+        }
+
+        private void kickToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (lstUsers.SelectedItems.Count == 0) return;
+            string nick = lstUsers.SelectedItems[0].Text;
+
+            _serverCommands.TryProcess(null, $"/kick {nick}");
+            AddLog($"[Kick: {nick}]");
+        }
+
+        private void banToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (lstUsers.SelectedItems.Count == 0) return;
+            string nick = lstUsers.SelectedItems[0].Text;
+
+            var confirm = MessageBox.Show(
+                $"–ó–∞–±–∞–Ω–∏—Ç—å {nick}?",
+                "–ü–æ–¥—Ç–≤–µ—Ä–∂–¥–µ–Ω–∏–µ",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirm != DialogResult.Yes) return;
+
+            _serverCommands.TryProcess(null, $"/ban {nick}");
+            AddLog($"[Ban: {nick}]");
         }
     }
 }

@@ -1,9 +1,9 @@
-using Loch.Core;
-using LochClient.GUI;
 using System;
 using System.Windows.Forms;
+using LochServer.Core;
+using LochServer.GUI;
 
-namespace Loch
+namespace LochServer
 {
     internal static class Program
     {

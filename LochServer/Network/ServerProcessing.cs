@@ -1,4 +1,4 @@
-﻿using Loch.Core;
+﻿using LochServer.Core;
 using LochServer.Network;
 using Microsoft.VisualBasic.Devices;
 using System;
@@ -10,7 +10,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Loch.Network
+namespace LochServer.Network
 {
     public class ServerProcessing
     {
@@ -21,6 +21,7 @@ namespace Loch.Network
         private ConfigImport _config;
         private readonly Action<string> _logAction;
 
+        public ServerCommands Commands { get; }
         public  ServerProcessing(ConfigImport config, Action<string> logAction = null)
         {
             _ip = config.Ip;
@@ -28,12 +29,12 @@ namespace Loch.Network
             _config = config;
             _logAction = logAction ?? ((msg) => Console.WriteLine(msg));
 
+            Commands = new ServerCommands(this, config, _logAction);
         }
         public async Task StartAsync()
         {
             _isRunning = true;
             _server = new TcpListener(IPAddress.Parse(_ip), _port);
-            _server.Start();
 
             while (_isRunning)
             {
@@ -46,6 +47,11 @@ namespace Loch.Network
                         _server.Stop();
                     }
                 }
+                else
+                {
+                    _server.Start(5);
+                    _logAction($"[Приём возобновлён]");
+                }
 
                 while (_isRunning && ClientInfo.GetAll().Count >= _config.MaxClients)
                 {
@@ -53,9 +59,6 @@ namespace Loch.Network
                 }
 
                 if (!_isRunning) break;
-
-                _server.Start(5);
-                _logAction($"[Приём возобновлён]");
 
                 TcpClient _client;
 

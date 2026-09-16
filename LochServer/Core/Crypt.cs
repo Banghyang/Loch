@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Loch.Core
+namespace LochServer.Core
 {
     public class Crypt
     {

@@ -1,4 +1,4 @@
-﻿using Loch.Core;
+﻿using LochServer.Core;
 using LochServer.Network;
 using Microsoft.VisualBasic.Devices;
 using System;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Loch.Network
+namespace LochServer.Network
 {
     internal class ClientHandler
     {
@@ -49,10 +49,22 @@ namespace Loch.Network
             }
         }
 
+        private bool BanCheck(ClientInfo clientinfo)
+        {
+            if (!File.Exists("banlist.txt")) return false;
+            string ip = clientinfo.ClientId.Split(':')[0];
+            return File.ReadAllLines("banlist.txt").Contains(ip);
+        }
+
         public async Task StartHandlingAsync()
         {
             var clientInformation = new ClientInfo(_client, _clientId);
-
+            if (BanCheck(clientInformation))
+            {
+                _logAction($"[Ban: Не так быстро, {clientInformation.ClientId.Split(":")[0]}]");
+                _client.Close();
+                return;
+            }
             ClientInfo.Add(clientInformation);
 
             string id = clientInformation.ClientId;

@@ -237,7 +237,7 @@ namespace Loch
 
         private void UpdateUserList(string[] userIds)
         {
-            if (EntryBox.ReadOnly = true) EntryBox.ReadOnly = false;
+            if (EntryBox.ReadOnly == true) EntryBox.ReadOnly = false;
             if (lstUsers.InvokeRequired)
             {
                 lstUsers.Invoke(() => UpdateUserList(userIds));

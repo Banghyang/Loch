@@ -1,4 +1,4 @@
-﻿namespace LochClient.GUI
+﻿namespace LochServer.GUI
 {
     partial class Auth
     {
