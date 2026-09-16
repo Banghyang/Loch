@@ -47,7 +47,9 @@
             // EntryBox
             // 
             EntryBox.Location = new Point(158, 405);
+            EntryBox.Multiline = true;
             EntryBox.Name = "EntryBox";
+            EntryBox.ReadOnly = true;
             EntryBox.Size = new Size(621, 23);
             EntryBox.TabIndex = 1;
             EntryBox.TextChanged += textBox1_TextChanged_1;

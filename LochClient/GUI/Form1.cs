@@ -133,7 +133,6 @@ namespace Loch
         {
             try
             {
-
                 _connection = new ConnectToServer(_config, msg => AddLog(msg));
 
                 _connection.MessageReceived += OnMessageReceived;
@@ -157,11 +156,12 @@ namespace Loch
 
         private void EntryBox_KeyDown(object sender, KeyEventArgs e)
         {
-
-
             if (e.KeyCode == Keys.Enter)
             {
-
+                if (e.Shift)
+                {
+                    return;
+                }
                 string message = EntryBox.Text.Trim();
 
                 if (!string.IsNullOrWhiteSpace(message))
@@ -237,6 +237,7 @@ namespace Loch
 
         private void UpdateUserList(string[] userIds)
         {
+            if (EntryBox.ReadOnly = true) EntryBox.ReadOnly = false;
             if (lstUsers.InvokeRequired)
             {
                 lstUsers.Invoke(() => UpdateUserList(userIds));
