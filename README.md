@@ -44,4 +44,4 @@ Banghyang - [github profile](https://github.com/Banghyang)
 Software distributed under [Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Current version
-v1.4
+v1.5
